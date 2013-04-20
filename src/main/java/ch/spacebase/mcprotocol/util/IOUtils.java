@@ -143,7 +143,7 @@ public final class IOUtils {
 
 	public static void writeMetadata(DataOutputStream out, WatchableObject data[]) throws IOException {
 		for(WatchableObject obj : data) {
-			int header = (obj.getType() << 5 | obj.getType() & 0x1f) & 0xff;
+			int header = (obj.getType() << 5 | obj.getId() & 0x1f) & 0xff;
 			out.writeByte(header);
 
 			switch(obj.getType()) {

@@ -67,10 +67,12 @@ public class ItemStack {
 
 	public void read(DataInputStream in) throws IOException {
 		this.item = in.readShort();
+		
 		if(this.item > -1) {
 			this.stackSize = in.readByte();
 			this.damage = in.readShort();
 			short length = in.readShort();
+			
 			if(length > -1) {
 				this.nbt = new byte[length];
 				in.readFully(this.nbt);
@@ -86,7 +88,8 @@ public class ItemStack {
 			if(this.nbt != null) {
 				out.writeShort(this.nbt.length);
 				out.write(this.nbt);
-			}
+			} else
+				out.writeShort(-1);
 		}
 	}
 
