@@ -49,8 +49,11 @@ public class PacketMapChunkBulk extends Packet {
 	@Override
 	public void read(DataInputStream in) throws IOException {
 		short columns = in.readShort();
+		//System.out.print("PacketMapChunkBulk::read => Read "+columns+" columns");
 		this.length = in.readInt();
+		//System.out.print("PacketMapChunkBulk::read => Compressed data has "+this.length+" bytes");
 		this.skylight = in.readBoolean();
+		//System.out.print("PacketMapChunkBulk::read => Data contains skylight info: "+this.skylight);
 		this.columnX = new int[columns];
 		this.columnZ = new int[columns];
 		this.primary = new int[columns];
@@ -59,6 +62,7 @@ public class PacketMapChunkBulk extends Packet {
 
 		this.compressed = new byte[this.length];
 		in.readFully(this.compressed, 0, this.length);
+		//System.out.print("PacketMapChunkBulk::read => Read dataData contains skylight info: "+this.skylight);
 
 		byte decompressed[] = new byte[0x30100 * columns];
 		Inflater inflater = new Inflater();
@@ -76,6 +80,7 @@ public class PacketMapChunkBulk extends Packet {
 		for(int column = 0; column < columns; column++) {
 			this.columnX[column] = in.readInt();
 			this.columnZ[column] = in.readInt();
+			//System.out.print("PacketMapChunkBulk::read => Read Chunk "+column+" with coordinate ("+this.columnX[column]+","+this.columnZ[column]+")");
 			this.primary[column] = in.readShort();
 			this.add[column] = in.readShort();
 			int off = 0;

@@ -3,6 +3,7 @@ package ch.spacebase.mcprotocol.standard.packet;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.EOFException;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -47,20 +48,28 @@ public class PacketMapChunk extends Packet {
 	public void read(DataInputStream in) throws IOException {
 		this.x = in.readInt();
 		this.z = in.readInt();
+		//System.out.print("PacketMapChunk::read => reading chunk ("+this.x+","+this.z+")");
 		this.groundUp = in.readBoolean();
+		//System.out.print("PacketMapChunk::read => groundUp: "+this.groundUp);
 		this.startY = in.readShort();
+		//System.out.print("PacketMapChunk::read => primaryBitMap: "+this.startY);
 		this.endY = in.readShort();
+		//System.out.print("PacketMapChunk::read => addBitMap: "+this.endY);
 		this.length = in.readInt();
+		//System.out.print("PacketMapChunk::read => : data length: "+this.length);
+
 
 		byte[] compressed = new byte[this.length];
-		in.readFully(compressed, 0, this.length);
+		//System.out.print("PacketMapChunk::read => Attempting to read "+this.length+" bytes of compressed data.");	
+		in.readFully(compressed);
+		//System.out.print("PacketMapChunk::read => Read compressed data");
 
 		int off = 0;
 		for(int count = 0; count < 16; count++) {
 			off += this.startY >> count & 1;
 		}
 
-		int size = 12288 * off;
+		int size = 12288* off;
 		if(this.groundUp) {
 			size += 256;
 		}
@@ -68,9 +77,11 @@ public class PacketMapChunk extends Packet {
 		this.data = new byte[size];
 		Inflater inflater = new Inflater();
 		inflater.setInput(compressed, 0, this.length);
-
+		//System.out.print("PacketMapChunk::read => Data ready to be decompressed");
+		
 		try {
-			inflater.inflate(this.data);
+			int result = inflater.inflate(this.data);
+			//System.out.print("PacketMapChunk::read => Decompressed "+result+" byes of data");
 		} catch (DataFormatException e) {
 			throw new IOException("Bad compressed data format");
 		} finally {
@@ -85,7 +96,7 @@ public class PacketMapChunk extends Packet {
 		out.writeBoolean(this.groundUp);
 		out.writeShort((short) (this.startY & 0xffff));
 		out.writeShort((short) (this.endY & 0xffff));
-		out.writeByte(this.length);
+		out.writeInt(this.length);
 		out.write(this.data, 0, this.length);
 	}
 

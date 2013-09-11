@@ -54,6 +54,16 @@ public class Constants {
 		public static final byte SHAKING_WATER = 8;
 		public static final byte EATING_ACCEPT = 9;
 		public static final byte SHEEP_EATING = 10;
+		public static final byte IRON_GOLEM_ROSE = 11;
+		public static final byte SPAWN_HEART_PARTICLES = 12;
+		public static final byte SPAWN_ANGRY_PARTICLES = 13;
+		public static final byte SPAWN_LOVE_PARTICLES = 14;
+		public static final byte SPAWN_MAGIC_PARTICLES = 15;
+		public static final byte ZOMBIE_INTO_VILLAGER = 16;
+		public static final byte EXPLODING_FIREWORK = 17;
+		public static final byte MOVE_TO_REPLICAPARTITION = 125;
+		public static final byte CONVERT_TO_AUTHORITATIVE = 126;
+		public static final byte CONVERT_TO_REPLICA = 127;
 	}
 	
 	public static class GameStateIds {
