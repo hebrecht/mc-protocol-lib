@@ -4,13 +4,15 @@ import java.text.DecimalFormat;
 
 import ch.spacebase.mcprotocol.event.DisconnectEvent;
 import ch.spacebase.mcprotocol.event.PacketRecieveEvent;
+import ch.spacebase.mcprotocol.event.PacketSendEvent;
 import ch.spacebase.mcprotocol.event.ProtocolListener;
 import ch.spacebase.mcprotocol.exception.ConnectException;
 import ch.spacebase.mcprotocol.net.Client;
 import ch.spacebase.mcprotocol.packet.Packet;
-import ch.spacebase.mcprotocol.standard.StandardProtocol;
+import ch.spacebase.mcprotocol.standard.StandardClient;
 import ch.spacebase.mcprotocol.standard.packet.PacketChat;
 import ch.spacebase.mcprotocol.standard.packet.PacketPlayerPositionLook;
+import ch.spacebase.mcprotocol.util.Util;
 
 /**
  * A simple bot that prints
@@ -24,14 +26,14 @@ public class ChatBot {
 	private Listener listener;
 
 	public ChatBot(String host, int port) {
-		this.client = new Client(new StandardProtocol(), host, port);
+		this.client = new StandardClient(host, port);
 		this.listener = new Listener();
 
 		this.client.listen(this.listener);
 	}
 
 	public void login(String username) {
-		this.client.setUser(username);
+		this.client.setUsername(username);
 
 		try {
 			this.client.connect();
@@ -48,13 +50,13 @@ public class ChatBot {
 
 	public static void main(String[] args) {
 		ChatBot bot = new ChatBot("127.0.0.1", 25565);
-		System.out.println("Logging in...");
+		Util.logger().info("Logging in...");
 		bot.login("Heisenberg");
 	}
 
 	private class Listener extends ProtocolListener {
 		@Override
-		public void onPacketRecieve(PacketRecieveEvent event) {
+		public void onPacketReceive(PacketRecieveEvent event) {
 			Packet packet = event.getPacket();
 
 			switch(event.getPacket().getId()) {
@@ -65,8 +67,12 @@ public class ChatBot {
 		}
 		
 		@Override
+		public void onPacketSend(PacketSendEvent event) {
+		}
+		
+		@Override
 		public void onDisconnect(DisconnectEvent event) {
-			System.out.println("Disconnected: " + event.getReason());
+			Util.logger().info("Disconnected: " + event.getReason());
 		}
 
 		public void onPositionLook(PacketPlayerPositionLook packet) {

@@ -1,8 +1,8 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
@@ -12,7 +12,8 @@ import java.net.URLEncoder;
 import ch.spacebase.mcprotocol.net.Client;
 import ch.spacebase.mcprotocol.net.ServerConnection;
 import ch.spacebase.mcprotocol.packet.Packet;
-import ch.spacebase.mcprotocol.standard.StandardProtocol;
+import ch.spacebase.mcprotocol.standard.StandardServer;
+import ch.spacebase.mcprotocol.standard.StandardServerConnection;
 import ch.spacebase.mcprotocol.util.Util;
 
 public class PacketClientStatus extends Packet {
@@ -31,12 +32,12 @@ public class PacketClientStatus extends Packet {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
+	public void read(NetInput in) throws IOException {
 		this.status = in.readByte();
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
+	public void write(NetOutput out) throws IOException {
 		out.writeByte(this.status);
 	}
 
@@ -46,8 +47,8 @@ public class PacketClientStatus extends Packet {
 
 	@Override
 	public void handleServer(ServerConnection conn) {
-		if(this.status == 0 && conn.getServer().verifyUsers()) {
-			String encrypted = new BigInteger(Util.encrypt(((StandardProtocol) conn.getProtocol()).getLoginKey(), conn.getServer().getKeys().getPublic(), ((StandardProtocol) conn.getProtocol()).getSecretKey())).toString(16);
+		if(this.status == 0 && conn.getServer().isAuthEnabled()) {
+			String encrypted = new BigInteger(Util.encrypt(((StandardServerConnection) conn).getLoginKey(), ((StandardServer) conn.getServer()).getKeys().getPublic(), ((StandardServerConnection) conn).getSecretKey())).toString(16);
 			String response = null;
 
 			try {

@@ -1,34 +1,29 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 
 import ch.spacebase.mcprotocol.net.Client;
 import ch.spacebase.mcprotocol.net.ServerConnection;
 import ch.spacebase.mcprotocol.packet.Packet;
+import ch.spacebase.mcprotocol.util.Constants;
 
 public class PacketServerPing extends Packet {
 
-	private static final byte MAGIC = 1;
-	public boolean newFormat = false;
+	public boolean readSuccessfully = false;
 
 	public PacketServerPing() {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
-		if(in.available() > 0) {
-			in.readByte();
-			this.newFormat = true;
-		} else {
-			this.newFormat = false;
-		}
+	public void read(NetInput in) throws IOException {
+		this.readSuccessfully = in.readBoolean();
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
-		out.writeByte(MAGIC);
+	public void write(NetOutput out) throws IOException {
+		out.writeByte(Constants.StandardProtocol.PING_MAGIC);
 	}
 
 	@Override

@@ -1,7 +1,7 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 
 import ch.spacebase.mcprotocol.net.Client;
@@ -20,10 +20,8 @@ public class PacketDestroyEntity extends Packet {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
-		int numEntityIds = in.readUnsignedByte();
-		//System.out.print("PacketDestroyEntity::read => Read "+numEntityIds+" entityIDs to be destroyed");
-		this.entityIds = new int[numEntityIds];
+	public void read(NetInput in) throws IOException {
+		this.entityIds = new int[in.UnsignedByte()];
 		for(int count = 0; count < this.entityIds.length; count++) {
 			this.entityIds[count] = in.readInt();
 			//System.out.print("PacketDestroyEntity::read => EntityID "+this.entityIds[count]+" should be destroyed");
@@ -31,7 +29,7 @@ public class PacketDestroyEntity extends Packet {
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
+	public void write(NetOutput out) throws IOException {
 		out.writeByte(this.entityIds.length);
 		//System.out.print("PacketDestroyEntity::write => Writing "+this.entityIds.length+" entityIDs to be destroyed");
 		for(int id : this.entityIds) {

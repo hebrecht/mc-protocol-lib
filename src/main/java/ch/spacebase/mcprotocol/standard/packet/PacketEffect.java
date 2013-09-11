@@ -1,7 +1,7 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 
 import ch.spacebase.mcprotocol.net.Client;
@@ -12,7 +12,7 @@ public class PacketEffect extends Packet {
 
 	public int effectId;
 	public int x;
-	public byte y;
+	public int y;
 	public int z;
 	public int data;
 	public boolean ignoreVolume;
@@ -20,7 +20,7 @@ public class PacketEffect extends Packet {
 	public PacketEffect() {
 	}
 
-	public PacketEffect(int effectId, int x, byte y, int z, int data, boolean ignoreVolume) {
+	public PacketEffect(int effectId, int x, int y, int z, int data, boolean ignoreVolume) {
 		this.effectId = effectId;
 		this.x = x;
 		this.y = y;
@@ -30,17 +30,17 @@ public class PacketEffect extends Packet {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
+	public void read(NetInput in) throws IOException {
 		this.effectId = in.readInt();
 		this.x = in.readInt();
-		this.y = in.readByte();
+		this.y = in.readUnsignedByte();
 		this.z = in.readInt();
 		this.data = in.readInt();
 		this.ignoreVolume = in.readBoolean();
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
+	public void write(NetOutput out) throws IOException {
 		out.writeInt(this.effectId);
 		out.writeInt(this.x);
 		out.writeByte(this.y);

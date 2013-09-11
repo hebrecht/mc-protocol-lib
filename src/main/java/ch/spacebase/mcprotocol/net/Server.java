@@ -1,67 +1,84 @@
 package ch.spacebase.mcprotocol.net;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import ch.spacebase.mcprotocol.event.ConnectEvent;
 import ch.spacebase.mcprotocol.event.ProtocolEvent;
 import ch.spacebase.mcprotocol.event.ServerListener;
-import ch.spacebase.mcprotocol.util.Util;
 
-public class Server {
+/**
+ * A server accepting client connections.
+ */
+public abstract class Server {
 
+	/**
+	 * The server's host to listen on.
+	 */
+	private String host;
+	
+	/**
+	 * The server's port to listen on.
+	 */
 	private int port;
-	private boolean online = true;
-
-	private List<ServerConnection> connections = new CopyOnWriteArrayList<ServerConnection>();
-	private KeyPair keys;
-	private boolean verify;
-	private Class<? extends Protocol> protocol;
+	
+	/**
+	 * Whether auth is enabled.
+	 */
+	private boolean auth;
+	
+	/**
+	 * Listeners listening to this server.
+	 */
 	private List<ServerListener> listeners = new ArrayList<ServerListener>();
-
-	public Server(Class<? extends Protocol> prot, int port, boolean verifyUsers) {
+	
+	/**
+	 * Creates a new server instance.
+	 * @param host Host to listen on.
+	 * @param port Port to listen on.
+	 */
+	public Server(String host, int port, boolean auth) {	
+		this.host = host;
 		this.port = port;
-		this.verify = verifyUsers;
-		this.protocol = prot;
-
-		try {
-			KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
-			gen.initialize(1024);
-			this.keys = gen.generateKeyPair();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void bind() {
-		try {
-			ServerSocket sock = new ServerSocket(this.port);
-			new ServerConnectionThread(sock).start();
-		} catch (IOException e) {
-			Util.logger().severe("Failed to bind to port " + this.port + "!");
-			e.printStackTrace();
-		}
-	}
-
-	public void shutdown() {
-		for(ServerConnection conn : this.connections) {
-			conn.disconnect("The server is shutting down!");
-		}
-
-		this.online = false;
+		this.auth = auth;
 	}
 	
+	/**
+	 * Gets the host of this server.
+	 * @return The server's host.
+	 */
+	public String getHost() {
+		return this.host;
+	}
+
+	/**
+	 * Gets the port of this server.
+	 * @return The server's port.
+	 */
+	public int getPort() {
+		return this.port;
+	}
+	
+	/**
+	 * Gets whether authentication is enabled.
+	 * @return Whether auth is enabled.
+	 */
+	public boolean isAuthEnabled() {
+		return this.auth;
+	}
+	
+	/**
+	 * Adds a listener to listen to this server.
+	 * @param listener Listener to add.
+	 */
 	public void listen(ServerListener listener) {
 		this.listeners.add(listener);
 	}
 
+	/**
+	 * Calls an event for this server.
+	 * @param event Event to call.
+	 * @return The event called.
+	 */
 	public <T extends ProtocolEvent<ServerListener>> T call(T event) {
 		for(ServerListener listener : this.listeners) {
 			event.call(listener);
@@ -69,46 +86,27 @@ public class Server {
 
 		return event;
 	}
-
-	public KeyPair getKeys() {
-		return this.keys;
-	}
-
-	public boolean verifyUsers() {
-		return this.verify;
-	}
-
-	private class ServerConnectionThread extends Thread {
-		private ServerSocket sock;
-
-		public ServerConnectionThread(ServerSocket sock) {
-			this.sock = sock;
-		}
-
-		@Override
-		public void run() {
-			while(online) {
-				try {
-					Socket client = this.sock.accept();
-					try {
-						ServerConnection conn = new ServerConnection(Server.this.protocol.getDeclaredConstructor().newInstance(), Server.this, client).connect();
-						connections.add(conn);
-						call(new ConnectEvent(conn));
-					} catch (Exception e) {
-						Util.logger().severe("Failed to create server connection!");
-						e.printStackTrace();
-					}
-				} catch (IOException e) {
-					Util.logger().severe("Failed to accept connection from client!");
-					e.printStackTrace();
-					continue;
-				}
-			}
-		}
-	}
-
-	public List<ServerConnection> getConnections() {
-		return new ArrayList<ServerConnection>(this.connections);
-	}
-
+	
+	/**
+	 * Gets whether the server is active.
+	 * @return Whether the server is active.
+	 */
+	public abstract boolean isActive();
+	
+	/**
+	 * Binds the server to its host and port.
+	 */
+	public abstract void bind();
+	
+	/**
+	 * Shuts the server down.
+	 */
+	public abstract void shutdown();
+	
+	/**
+	 * Gets a list of connections connected to this server.
+	 * @return The server's connections.
+	 */
+	public abstract List<ServerConnection> getConnections();
+	
 }

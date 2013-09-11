@@ -1,16 +1,16 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 import java.security.PublicKey;
 
 import ch.spacebase.mcprotocol.net.Client;
 import ch.spacebase.mcprotocol.net.ServerConnection;
 import ch.spacebase.mcprotocol.packet.Packet;
-import ch.spacebase.mcprotocol.standard.StandardProtocol;
+import ch.spacebase.mcprotocol.standard.StandardServer;
+import ch.spacebase.mcprotocol.standard.StandardServerConnection;
 import ch.spacebase.mcprotocol.util.Constants;
-import ch.spacebase.mcprotocol.util.IOUtils;
 import ch.spacebase.mcprotocol.util.Util;
 
 public class PacketHandshake extends Packet {
@@ -24,25 +24,25 @@ public class PacketHandshake extends Packet {
 	}
 
 	public PacketHandshake(String user, String host, int port) {
-		this.protocol = Constants.STANDARD_PROTOCOL_VERSION;
+		this.protocol = Constants.StandardProtocol.PROTOCOL_VERSION;
 		this.user = user;
 		this.host = host;
 		this.port = port;
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
+	public void read(NetInput in) throws IOException {
 		this.protocol = in.readByte();
-		this.user = IOUtils.readString(in);
-		this.host = IOUtils.readString(in);
+		this.user = in.readString();
+		this.host = in.readString();
 		this.port = in.readInt();
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
+	public void write(NetOutput out) throws IOException {
 		out.writeByte(this.protocol);
-		IOUtils.writeString(out, this.user);
-		IOUtils.writeString(out, this.host);
+		out.writeString(this.user);
+		out.writeString(this.host);
 		out.writeInt(this.port);
 	}
 
@@ -54,21 +54,21 @@ public class PacketHandshake extends Packet {
 	public void handleServer(ServerConnection conn) {
 		if(!Util.stripColor(this.user).equals(this.user)) {
 			conn.disconnect("Invalid username.");
-		} else if(this.protocol != Constants.STANDARD_PROTOCOL_VERSION) {
-			if(this.protocol > Constants.STANDARD_PROTOCOL_VERSION) {
+		} else if(this.protocol != Constants.StandardProtocol.PROTOCOL_VERSION) {
+			if(this.protocol > Constants.StandardProtocol.PROTOCOL_VERSION) {
 				conn.disconnect("Outdated Server!");
 			} else {
 				conn.disconnect("Outdated Client!");
 			}
 		} else {
 			conn.setUsername(this.user);
-			PublicKey key = conn.getServer().getKeys().getPublic();
-			((StandardProtocol) conn.getProtocol()).setLoginKey(conn.getServer().verifyUsers() ? Long.toString(Util.random().nextLong(), 16) : "-");
+			PublicKey key = ((StandardServer) conn.getServer()).getKeys().getPublic();
+			((StandardServerConnection) conn).setLoginKey(conn.getServer().isAuthEnabled() ? Long.toString(Util.random().nextLong(), 16) : "-");
 			byte token[] = new byte[4];
 			Util.random().nextBytes(token);
-			((StandardProtocol) conn.getProtocol()).setToken(token);
+			((StandardServerConnection) conn).setToken(token);
 
-			conn.send(new PacketKeyRequest(((StandardProtocol) conn.getProtocol()).getLoginKey(), key.getEncoded(), token));
+			conn.send(new PacketKeyRequest(((StandardServerConnection) conn).getLoginKey(), key.getEncoded(), token));
 		}
 	}
 

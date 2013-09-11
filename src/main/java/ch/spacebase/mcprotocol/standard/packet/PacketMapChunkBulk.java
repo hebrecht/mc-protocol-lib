@@ -1,7 +1,7 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -47,7 +47,7 @@ public class PacketMapChunkBulk extends Packet {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
+	public void read(NetInput in) throws IOException {
 		short columns = in.readShort();
 		//System.out.print("PacketMapChunkBulk::read => Read "+columns+" columns");
 		this.length = in.readInt();
@@ -60,10 +60,7 @@ public class PacketMapChunkBulk extends Packet {
 		this.add = new int[columns];
 		this.chunks = new byte[columns][];
 
-		this.compressed = new byte[this.length];
-		in.readFully(this.compressed, 0, this.length);
-		//System.out.print("PacketMapChunkBulk::read => Read dataData contains skylight info: "+this.skylight);
-
+		this.compressed = in.readBytes(this.length);
 		byte decompressed[] = new byte[0x30100 * columns];
 		Inflater inflater = new Inflater();
 		inflater.setInput(this.compressed, 0, this.length);
@@ -97,11 +94,11 @@ public class PacketMapChunkBulk extends Packet {
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
+	public void write(NetOutput out) throws IOException {
 		out.writeShort(this.columnX.length);
 		out.writeInt(this.length);
 		out.writeBoolean(this.skylight);
-		out.write(this.compressed, 0, this.length);
+		out.writeBytes(this.compressed, this.length);
 		for(int count = 0; count < this.columnX.length; count++) {
 			out.writeInt(this.columnX[count]);
 			out.writeInt(this.columnZ[count]);

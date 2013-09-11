@@ -1,8 +1,8 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
@@ -29,8 +29,7 @@ import org.bouncycastle.crypto.KeyGenerationParameters;
 import ch.spacebase.mcprotocol.net.Client;
 import ch.spacebase.mcprotocol.net.ServerConnection;
 import ch.spacebase.mcprotocol.packet.Packet;
-import ch.spacebase.mcprotocol.standard.StandardProtocol;
-import ch.spacebase.mcprotocol.util.IOUtils;
+import ch.spacebase.mcprotocol.standard.StandardClient;
 import ch.spacebase.mcprotocol.util.Util;
 
 public class PacketKeyRequest extends Packet {
@@ -61,24 +60,22 @@ public class PacketKeyRequest extends Packet {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
-		this.serverId = IOUtils.readString(in);
-		byte pubKey[] = new byte[in.readShort()];
-		in.readFully(pubKey);
+	public void read(NetInput in) throws IOException {
+		this.serverId = in.readString();
+		byte pubKey[] = in.readBytes(in.readShort());
 		this.pubKey = pubKey;
 
-		byte verifyToken[] = new byte[in.readShort()];
-		in.readFully(verifyToken);
+		byte verifyToken[] = in.readBytes(in.readShort());
 		this.verifyToken = verifyToken;
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
-		IOUtils.writeString(out, this.serverId);
+	public void write(NetOutput out) throws IOException {
+		out.writeString(this.serverId);
 		out.writeShort(this.pubKey.length);
-		out.write(this.pubKey);
+		out.writeBytes(this.pubKey);
 		out.writeShort(this.verifyToken.length);
-		out.write(this.verifyToken);
+		out.writeBytes(this.verifyToken);
 	}
 
 	@Override
@@ -87,7 +84,7 @@ public class PacketKeyRequest extends Packet {
 		SecretKey secret = generateKey();
 		if(!this.serverId.equals("-")) {
 			String encrypted = new BigInteger(Util.encrypt(this.serverId, key, secret)).toString(16);
-			String response = joinServer(conn.getUsername(), conn.getSessionId(), encrypted);
+			String response = joinServer(conn.getUsername(), ((StandardClient) conn).getSessionId(), encrypted);
 			if(!response.equalsIgnoreCase("ok")) {
 				Util.logger().severe("Failed to login to session.minecraft.net! (RESPONSE: \"" + response + "\")");
 				conn.disconnect("Failed to login to session.minecraft.net!");
@@ -96,7 +93,7 @@ public class PacketKeyRequest extends Packet {
 		}
 
 		conn.send(new PacketKeyResponse(encryptBytes(key, secret.getEncoded()), encryptBytes(key, this.verifyToken)));
-		((StandardProtocol) conn.getProtocol()).setSecretKey(secret);
+		((StandardClient) conn).setSecretKey(secret);
 	}
 
 	@Override

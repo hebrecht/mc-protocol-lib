@@ -1,7 +1,7 @@
 package ch.spacebase.mcprotocol.standard.packet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import ch.spacebase.mcprotocol.net.io.NetInput;
+import ch.spacebase.mcprotocol.net.io.NetOutput;
 import java.io.IOException;
 
 import ch.spacebase.mcprotocol.net.Client;
@@ -13,13 +13,13 @@ public class PacketUseBed extends Packet {
 	public int entityId;
 	public byte unknown;
 	public int x;
-	public byte y;
+	public int y;
 	public int z;
 
 	public PacketUseBed() {
 	}
 
-	public PacketUseBed(int entityId, byte unknown, int x, byte y, int z) {
+	public PacketUseBed(int entityId, byte unknown, int x, int y, int z) {
 		this.entityId = entityId;
 		this.unknown = unknown;
 		this.x = x;
@@ -28,16 +28,16 @@ public class PacketUseBed extends Packet {
 	}
 
 	@Override
-	public void read(DataInputStream in) throws IOException {
+	public void read(NetInput in) throws IOException {
 		this.entityId = in.readInt();
 		this.unknown = in.readByte();
 		this.x = in.readInt();
-		this.y = in.readByte();
+		this.y = in.readUnsignedByte();
 		this.z = in.readInt();
 	}
 
 	@Override
-	public void write(DataOutputStream out) throws IOException {
+	public void write(NetOutput out) throws IOException {
 		out.writeInt(this.entityId);
 		out.writeByte(this.unknown);
 		out.writeInt(this.x);
