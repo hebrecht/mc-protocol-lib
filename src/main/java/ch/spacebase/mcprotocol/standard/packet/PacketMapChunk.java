@@ -20,6 +20,7 @@ public class PacketMapChunk extends Packet {
 	public int startY;
 	public int endY;
 	public byte data[];
+	public int length;
 
 	public PacketMapChunk() {
 	}
@@ -30,22 +31,42 @@ public class PacketMapChunk extends Packet {
 		this.groundUp = groundUp;
 		this.startY = startY;
 		this.endY = endY;
-		this.data = data;
+		
+//		System.out.println("PacketMapChunk::constructor => Input data has length "+data.length);
+		//this.data = data;
+		
+		Deflater deflater = new Deflater(-1);
+		this.data = new byte[0];
+		this.length = 0;
+		try {
+			deflater.setInput(data, 0, data.length);
+			deflater.finish();
+			this.data = new byte[data.length];
+			this.length = deflater.deflate(this.data);
+	//		System.out.println("PacketMapChunk::constructor => Compressed data has length "+this.length);
+
+		} finally {
+			deflater.end();
+		}
+		
 	}
 
 	@Override
 	public void read(NetInput in) throws IOException {
 		this.x = in.readInt();
 		this.z = in.readInt();
-		//System.out.print("PacketMapChunk::read => reading chunk ("+this.x+","+this.z+")");
+	//	System.out.print("PacketMapChunk::read => reading chunk ("+this.x+","+this.z+")");
 		this.groundUp = in.readBoolean();
-		//System.out.print("PacketMapChunk::read => groundUp: "+this.groundUp);
+	//	System.out.print("PacketMapChunk::read => groundUp: "+this.groundUp);
 		this.startY = in.readShort();
-		//System.out.print("PacketMapChunk::read => primaryBitMap: "+this.startY);
+	//	System.out.print("PacketMapChunk::read => primaryBitMap: "+this.startY);
 		this.endY = in.readShort();
-int length = in.readInt();
+		this.length = in.readInt();
+	//	System.out.print("PacketMapChunk::read => : data length: "+this.length);
 
-		byte[] compressed = in.readBytes(length);
+
+	//	System.out.print("PacketMapChunk::read => Attempting to read "+this.length+" bytes of compressed data."); 
+		byte[] compressed = in.readBytes(this.length);
 
 		int off = 0;
 		int msb = 0;
@@ -61,11 +82,13 @@ int length = in.readInt();
 
 		this.data = new byte[size];
 		Inflater inflater = new Inflater();
-		inflater.setInput(compressed, 0, length);
+		inflater.setInput(compressed, 0, this.length);
+	//	System.out.print("PacketMapChunk::read => Data ready to be decompressed");
+
 
 		try {
 			int result = inflater.inflate(this.data);
-			//System.out.print("PacketMapChunk::read => Decompressed "+result+" byes of data");
+		//	System.out.print("PacketMapChunk::read => Decompressed "+result+" byes of data");
 		} catch (DataFormatException e) {
 			throw new IOException("Bad compressed data format");
 		} finally {
@@ -75,25 +98,13 @@ int length = in.readInt();
 
 	@Override
 	public void write(NetOutput out) throws IOException {
-		Deflater deflater = new Deflater(-1);
-		byte data[] = new byte[0];
-		int length = 0;
-		try {
-			deflater.setInput(this.data, 0, this.data.length);
-			deflater.finish();
-			data = new byte[this.data.length];
-			length = deflater.deflate(this.data);
-		} finally {
-			deflater.end();
-		}
-		
 		out.writeInt(this.x);
 		out.writeInt(this.z);
 		out.writeBoolean(this.groundUp);
 		out.writeShort((short) (this.startY & 0xffff));
 		out.writeShort((short) (this.endY & 0xffff));
-		out.writeInt(length);
-		out.writeBytes(data, length);
+		out.writeInt(this.length);
+		out.writeBytes(this.data, this.length);
 	}
 
 	@Override

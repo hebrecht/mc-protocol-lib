@@ -21,7 +21,7 @@ public class PacketDestroyEntity extends Packet {
 
 	@Override
 	public void read(NetInput in) throws IOException {
-		this.entityIds = new int[in.UnsignedByte()];
+		this.entityIds = new int[in.readUnsignedByte()];
 		for(int count = 0; count < this.entityIds.length; count++) {
 			this.entityIds[count] = in.readInt();
 			//System.out.print("PacketDestroyEntity::read => EntityID "+this.entityIds[count]+" should be destroyed");

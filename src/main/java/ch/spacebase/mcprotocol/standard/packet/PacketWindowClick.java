@@ -17,18 +17,18 @@ public class PacketWindowClick extends Packet {
 	public short slot;
 	public byte mousebutton;
 	public short action;
-	public boolean shift;
+	public byte mode;
 	public StandardItemStack clicked;
 
 	public PacketWindowClick() {
 	}
 
-	public PacketWindowClick(byte id, short slot, byte mousebutton, short action, boolean shift, StandardItemStack clicked) {
+	public PacketWindowClick(byte id, short slot, byte mousebutton, short action, byte mode, StandardItemStack clicked) {
 		this.id = id;
 		this.slot = slot;
 		this.mousebutton = mousebutton;
 		this.action = action;
-		this.shift = shift;
+		this.mode = mode;
 		this.clicked = clicked;
 	}
 
@@ -38,7 +38,7 @@ public class PacketWindowClick extends Packet {
 		this.slot = in.readShort();
 		this.mousebutton = in.readByte();
 		this.action = in.readShort();
-		this.shift = in.readBoolean();
+		this.mode = in.readByte();
 		this.clicked = ((StandardInput) in).readItem();
 	}
 
@@ -48,7 +48,7 @@ public class PacketWindowClick extends Packet {
 		out.writeShort(this.slot);
 		out.writeByte(this.mousebutton);
 		out.writeShort(this.action);
-		out.writeBoolean(this.shift);
+		out.writeByte(this.mode);
 		if(this.clicked != null) {
 			((StandardOutput) out).writeItem(this.clicked);
 		}
