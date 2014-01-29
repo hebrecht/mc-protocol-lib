@@ -111,7 +111,7 @@ public class StandardOutput implements NetOutput {
 	 */
 	public void writeMetadata(WatchableObject data[]) throws IOException {
 		for(WatchableObject obj : data) {
-			int header = (obj.getType() << 5 | obj.getType() & 0x1f) & 0xff;
+			int header = (obj.getType() << 5 | obj.getId() & 0x1f) & 0xff;
 			this.writeByte(header);
 			switch(obj.getType()) {
 				case Constants.StandardProtocol.WatchableObjectIds.BYTE:
