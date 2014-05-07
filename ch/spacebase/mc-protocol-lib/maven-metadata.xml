@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>ch.spacebase</groupId>
+  <artifactId>mc-protocol-lib</artifactId>
+  <versioning>
+    <versions>
+      <version>dev-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20140507132121</lastUpdated>
+  </versioning>
+</metadata>
